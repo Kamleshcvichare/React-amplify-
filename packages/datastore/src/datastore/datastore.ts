@@ -224,10 +224,14 @@ const initSchema = (userSchema: Schema) => {
 	return userClasses;
 };
 
-/* Checks if the schema has been initialized by initSchema().
+/**
+ * Throws an exception if the schema has *not* been initialized
+ * by `initSchema()`.
  *
- * Call this function before accessing schema.
- * Currently this only needs to be called in start() and clear() because all other functions will call start first.
+ * **To be called before trying to access schema.**
+ *
+ * Currently this only needs to be called in `start()` and `clear()` because
+ * all other functions will call start first.
  */
 const checkSchemaInitialized = () => {
 	if (schema === undefined) {
@@ -260,11 +264,31 @@ const createTypeClasses: (
 	return classes;
 };
 
+/**
+ * Constructs a model and records it with its metadata in a weakset. Allows for
+ * the separate storage of core model fields and Amplify/DataStore metadata
+ * fields that the customer app does not want exposed.
+ *
+ * @param modelConstructor The model constructor.
+ * @param init Init data that would normally be passed to the constructor.
+ * @returns The initialized model.
+ */
 export declare type ModelInstanceCreator = typeof modelInstanceCreator;
 
+/**
+ * Collection of instantiated models to allow storage of metadata apart from
+ * the model visible to the consuming app -- in case the app doesn't have
+ * metadata fields (_version, _deleted, etc.) exposed on the model itself.
+ *
+ * TODO: Am I understanding this correctly?
+ */
 const instancesMetadata = new WeakSet<
 	ModelInit<PersistentModel & Partial<ModelInstanceMetadata>>
 >();
+
+/**
+ * @see ModelInstanceCreator
+ */
 function modelInstanceCreator<T extends PersistentModel = PersistentModel>(
 	modelConstructor: PersistentModelConstructor<T>,
 	init: ModelInit<T> & Partial<ModelInstanceMetadata>
@@ -630,6 +654,18 @@ function getModelConstructorByModelName(
 	}
 }
 
+/**
+ * Queries the DataStore metadata tables to see if they are the expected
+ * version. If not, clobbers the whole DB. If so, leaves them alone.
+ * Otherwise, simply writes the schema version.
+ *
+ * SIDE EFFECT:
+ * 1. Creates a transaction
+ * 1. Updates data.
+ *
+ * @param storage Storage adapter containing the metadata.
+ * @param version The expected schema version.
+ */
 async function checkSchemaVersion(
 	storage: Storage,
 	version: string
@@ -728,10 +764,48 @@ class DataStore {
 	private sessionId: string;
 	private storageAdapter: Adapter;
 
+	/**
+	 * **IMPORTANT!**
+	 *
+	 * Accumulator for functions that can **and MUST** be called when DataStore
+	 * stops. These functions **MUST** be *idempotent promises* that resolve ONLY
+	 * once the intended jobs are completely finished and/or otherwise destroyed
+	 * and cleaned up with ZERO outstanding ...
+	 *
+	 * 1. side effects (e.g., state changes)
+	 * 1. callbacks
+	 * 1. subscriptions
+	 * 1. calls to storage
+	 * 1. *etc.*
+	 *
+	 * Methods that create pending promises, subscriptions, callbacks, or any
+	 * type of side effect **MUST** register a disposer.
+	 *
+	 * Failure to comply will put DataStore into a highly unpredictable state
+	 * when it needs to stop or clear -- which occurs when restarting with new
+	 * sync expressions, during testing, and potentially during app code
+	 * recovery handling, etc..
+	 *
+	 * It is up to the discretion of each disposer whether to wait for job
+	 * completion or to cancel operations and issue failures *as long as the
+	 * disposer returns in a reasonable amount of time.* (Seconds, not
+	 * minutes.)
+	 */
+	private disposers: Promise<void>[] = [];
+
 	getModuleName() {
 		return 'DataStore';
 	}
 
+	/**
+	 * If not already done:
+	 * 1. Attaches and initializes storage.
+	 * 1. Loads the schema and records metadata.
+	 * 1. If `this.amplifyConfig.aws_appsync_graphqlEndpoint` contains a URL,
+	 * attaches a sync engine, starts it, and subscribes.
+	 *
+	 *
+	 */
 	start = async (): Promise<void> => {
 		if (this.initialized === undefined) {
 			logger.debug('Starting DataStore');
@@ -1498,6 +1572,13 @@ class DataStore {
 		this.sessionId = this.retrieveSessionId();
 	};
 
+	/**
+	 * Clears all data from storage and removes all initialization details.
+	 *
+	 * Reinitialization is required after clearing. This can be done by
+	 * explicitiliy calling `start()` or any method that implicitly starts
+	 * DataStore, such as `query()`, `save()`, or `delete()`.
+	 */
 	clear = async function clear() {
 		checkSchemaInitialized();
 		if (this.storage === undefined) {
@@ -1529,10 +1610,18 @@ class DataStore {
 		this.syncPredicates = new WeakMap<SchemaModel, ModelPredicate<any>>();
 	};
 
+	/**
+	 * Stops all DataStore sync activities.
+	 *
+	 * TODO: "Waits for graceful termination of
+	 * running queries and terminates subscriptions."
+	 */
 	stop = async function stop() {
 		if (this.initialized !== undefined) {
 			await this.start();
 		}
+
+		// TODO: stop running queries here.
 
 		if (syncSubscription && !syncSubscription.closed) {
 			syncSubscription.unsubscribe();
@@ -1546,6 +1635,13 @@ class DataStore {
 		this.sync = undefined;
 	};
 
+	/**
+	 * Validates given pagination input from a query and creates a pagination
+	 * argument for use against the storage layer.
+	 *
+	 * @param modelDefinition
+	 * @param paginationProducer
+	 */
 	private processPagination<T extends PersistentModel>(
 		modelDefinition: SchemaModel,
 		paginationProducer: ProducerPaginationInput<T>
@@ -1595,6 +1691,10 @@ class DataStore {
 		};
 	}
 
+	/**
+	 * Examines the configured `syncExpressions` and produces a WeakMap of
+	 * SchemaModel -> predicate to use during sync.
+	 */
 	private async processSyncExpressions(): Promise<
 		WeakMap<SchemaModel, ModelPredicate<any>>
 	> {
@@ -1680,7 +1780,10 @@ class DataStore {
 		}, new WeakMap<SchemaModel, ModelPredicate<any>>());
 	}
 
-	// database separation for Amplify Console. Not a public API
+	/**
+	 * A session ID to allow CMS to open databases against multiple apps.
+	 * This session ID is only expected be set by AWS Amplify Studio.
+	 */
 	private retrieveSessionId(): string | undefined {
 		try {
 			const sessionId = sessionStorage.getItem('datastoreSessionId');
