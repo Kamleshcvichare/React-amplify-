@@ -11,8 +11,6 @@ import { DataStore } from '@aws-amplify/datastore';
 import { Amplify } from './index';
 
 const requiredModules = [
-	// Credentials cannot function without Auth
-	Auth,
 	// API cannot function without InternalAuth
 	InternalAuth,
 	// Auth cannot function without Credentials
