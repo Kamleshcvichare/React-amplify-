@@ -29,7 +29,7 @@ describe('withSSRContext', () => {
 	});
 
 	describe('API', () => {
-		it('should be a different instance than Amplify.Auth', () => {
+		it('should be a different instance than Amplify.API', () => {
 			expect(withSSRContext().API).not.toBe(Amplify.API);
 		});
 
@@ -53,15 +53,19 @@ describe('withSSRContext', () => {
 		it('should be a different instance than Amplify.Auth', () => {
 			expect(withSSRContext().Auth).not.toBe(Amplify.Auth);
 		});
+	});
 
+	describe('InternalAuth', () => {
 		it('should be created with UniversalStorage', () => {
-			expect(withSSRContext().Auth._storage).toBeInstanceOf(UniversalStorage);
+			expect(withSSRContext().InternalAuth._storage).toBeInstanceOf(
+				UniversalStorage
+			);
 		});
 
 		it('should use different Credentials than Amplify', () => {
-			const amplify = withSSRContext();
-
-			expect(Amplify.Auth.Credentials).not.toBe(amplify.Auth.Credentials);
+			expect(withSSRContext().InternalAuth.Credentials).not.toBe(
+				Amplify.Credentials
+			);
 		});
 	});
 
@@ -71,7 +75,7 @@ describe('withSSRContext', () => {
 		});
 
 		it('should use Amplify components from the ssr context', () => {
-			const { Auth, DataStore, InternalAPI, InternalAuth } = withSSRContext();
+			const { DataStore, InternalAPI, InternalAuth } = withSSRContext();
 
 			expect(DataStore.InternalAPI).toBe(InternalAPI);
 			expect(DataStore.InternalAPI).not.toBe(Amplify.InternalAPI);
