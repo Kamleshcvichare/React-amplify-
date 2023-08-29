@@ -14,10 +14,6 @@ import {
 } from 'amazon-cognito-identity-js';
 import { AuthErrorStrings } from './common/AuthErrorStrings';
 
-/**
- * @deprecated use named import
- */
-export default Auth;
 export {
 	Auth,
 	CognitoUser,
