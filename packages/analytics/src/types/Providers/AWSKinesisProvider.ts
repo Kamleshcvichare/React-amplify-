@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 export interface KinesisAnalyticsEvent {
 	data: object | string;
-	partitionKey: string;
 	streamName: string;
+	partitionKey?: string;
 	immediate?: boolean;
 }
