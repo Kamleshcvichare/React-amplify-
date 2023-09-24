@@ -81,6 +81,12 @@ declare module 'amazon-cognito-identity-js' {
 		clientMetadata: Record<string, string>;
 	}
 
+	export enum AuthenticationFlowType {
+		USER_SRP_AUTH = 'USER_SRP_AUTH',
+		USER_PASSWORD_AUTH = 'USER_PASSWORD_AUTH',
+		CUSTOM_AUTH = 'CUSTOM_AUTH',
+	}
+
 	export type ChallengeName =
 		| 'CUSTOM_CHALLENGE'
 		| 'MFA_SETUP'
@@ -331,13 +337,23 @@ declare module 'amazon-cognito-identity-js' {
 		AdvancedSecurityDataCollectionFlag?: boolean;
 	}
 
-	export class CognitoUserPool {
+	export interface CognitoUserPool {
+		advancedSecurityDataCollectionFlag: boolean;
+		clientId: string;
+		userPoolId: string;
+	}
+
+	export class CognitoUserPool implements CognitoUserPool {
 		constructor(
 			data: ICognitoUserPoolData,
 			wrapRefreshSessionCallback?: (
 				target: NodeCallback.Any
 			) => NodeCallback.Any
 		);
+
+		public clientId: string;
+		public userPoolId: string;
+		public advancedSecurityDataCollectionFlag: boolean;
 
 		public getUserPoolId(): string;
 		public getUserPoolName(): string;
@@ -374,30 +390,49 @@ declare module 'amazon-cognito-identity-js' {
         public config: AWS.CognitoIdentityServiceProvider.Types.ClientConfiguration;
     }
     */
-	export class CognitoAccessToken {
-		payload: { [key: string]: any };
 
+	export interface CognitoAccessToken {
+		jwtToken: string;
+		payload: { [key: string]: any };
+	}
+
+	export class CognitoAccessToken implements CognitoAccessToken {
 		constructor({ AccessToken }: { AccessToken: string });
 
+		public jwtToken: string;
+		public payload: CognitoAccessToken['payload'];
+
 		public getJwtToken(): string;
 		public getExpiration(): number;
 		public getIssuedAt(): number;
 		public decodePayload(): { [id: string]: any };
 	}
 
-	export class CognitoIdToken {
+	export interface CognitoIdToken {
+		jwtToken: string;
 		payload: { [key: string]: any };
+	}
 
+	export class CognitoIdToken implements CognitoIdToken {
 		constructor({ IdToken }: { IdToken: string });
 
+		public jwtToken: string;
+		public payload: CognitoIdToken['payload'];
+
 		public getJwtToken(): string;
 		public getExpiration(): number;
 		public getIssuedAt(): number;
 		public decodePayload(): { [id: string]: any };
 	}
 
-	export class CognitoRefreshToken {
+	export interface CognitoRefreshToken {
+		token: string;
+	}
+
+	export class CognitoRefreshToken implements CognitoRefreshToken {
 		constructor({ RefreshToken }: { RefreshToken: string });
+
+		public token: string;
 
 		public getToken(): string;
 	}
