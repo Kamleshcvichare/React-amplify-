@@ -17,6 +17,9 @@ env:
 jobs:
   build_apps:
     name: Build Sample App Tests
+    strategy:
+      matrix:
+        node-version: [18, 20]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -31,6 +34,8 @@ jobs:
           GH_TOKEN_STAGING_READ: ${{ secrets.GH_TOKEN_STAGING_READ }}
       - name: Setup node and build the repository
         uses: ./amplify-js/.github/actions/node-and-build
+        with:
+          node-version: ${{ matrix.node-version }}
 
         # React
       - name: Create react application
@@ -88,7 +93,6 @@ jobs:
         working-directory: amplify-js-samples-staging/samples/angular/interactions/new-angular-app
       - name: Install amplify
         run: |
-          npm install -g npm@latest
           npm install aws-amplify -legacy-peer-deps
         working-directory: amplify-js-samples-staging/samples/angular/interactions/new-angular-app
       - name: Start application and run test
@@ -126,7 +130,6 @@ jobs:
         working-directory: amplify-js-samples-staging/samples/next/auth/new-next-app
       - name: Install amplify
         run: |
-          npm install -g npm@latest
           npm install aws-amplify -legacy-peer-deps
         working-directory: amplify-js-samples-staging/samples/next/auth/new-next-app
       - name: Start application and run test
@@ -158,7 +161,6 @@ jobs:
         working-directory: amplify-js-samples-staging/cypress/integration/auth
       - name: Install amplify
         run: |
-          npm install -g npm@latest
           npm install aws-amplify -legacy-peer-deps
         working-directory: amplify-js-samples-staging/samples/vue/auth/new-vue-app
       - name: Install dependencies
@@ -186,7 +188,6 @@ jobs:
         working-directory: amplify-js-samples-staging/samples/javascript/auth
       - name: Install amplify
         run: |
-          npm install -g npm@latest
           npm install aws-amplify -legacy-peer-deps
         working-directory: amplify-js-samples-staging/samples/javascript/auth/new-javascript-app
       - name: Remove existing src folder
