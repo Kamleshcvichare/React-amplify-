@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 import { Amplify, Hub } from '@aws-amplify/core';
 import { respondToAuthChallenge } from '../utils/clients/CognitoIdentityProvider';
 import {
@@ -59,8 +62,8 @@ export const confirmSignInWithOTP = async (
 		},
 		Session: signInSession,
 		ClientMetadata: {
-			signInMethod: 'OTP',
-			action: 'CONFIRM',
+			"Amplify.Passwordless.signInMethod": "OTP",
+			"Amplify.Passwordless.action": "CONFIRM",
 		},
 		ClientId: userPoolClientId,
 	};
