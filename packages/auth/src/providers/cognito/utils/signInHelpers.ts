@@ -7,6 +7,7 @@ import {
 	assertTokenProviderConfig,
 	base64Encoder,
 	AmplifyUrl,
+	getDeviceName
 } from '@aws-amplify/core/internals/utils';
 import { AuthenticationHelper } from './srp/AuthenticationHelper';
 import { BigInteger } from './srp/BigInteger';
@@ -1060,6 +1061,7 @@ export async function getNewDeviceMetatada(
 			{ region: getRegion(userPoolId) },
 			{
 				AccessToken: accessToken,
+				DeviceName: await getDeviceName(),
 				DeviceKey: newDeviceMetadata?.DeviceKey,
 				DeviceSecretVerifierConfig: deviceSecretVerifierConfig,
 			},

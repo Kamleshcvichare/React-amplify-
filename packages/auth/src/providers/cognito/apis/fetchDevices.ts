@@ -57,9 +57,11 @@ const parseDevicesResponse = async (
 			DeviceLastModifiedDate,
 			DeviceLastAuthenticatedDate,
 		}) => {
+			let deviceName: string | undefined;
 			const attributes = DeviceAttributes.reduce(
 				(attrs: any, { Name, Value }) => {
 					if (Name && Value) {
+						if (Name === 'device_name') deviceName = Value;
 						attrs[Name] = Value;
 					}
 					return attrs;
@@ -68,6 +70,7 @@ const parseDevicesResponse = async (
 			);
 			return {
 				id,
+				name: deviceName,
 				attributes,
 				createDate: DeviceCreateDate
 					? new Date(DeviceCreateDate * 1000)
