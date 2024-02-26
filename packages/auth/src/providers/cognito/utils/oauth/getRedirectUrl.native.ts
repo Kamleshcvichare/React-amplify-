@@ -10,7 +10,12 @@ export function getRedirectUrl(redirects: string[]): string {
 			!redirect.startsWith('http://') && !redirect.startsWith('https://'),
 	);
 	if (!redirect) {
-		throw invalidRedirectException;
-	}
+		if (redirects.length === 0) {
+			throw invalidRedirectException;
+		} else {
+			// fallsback to available redirect URL. Addresses: https://github.com/aws-amplify/amplify-js/issues/12890
+			return redirects[0];
+		}
+	} 
 	return redirect;
 }
