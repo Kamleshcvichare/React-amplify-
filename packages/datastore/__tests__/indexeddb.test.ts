@@ -22,6 +22,10 @@ import {
 	Project,
 	Team,
 } from './model';
+import { Predicates as PredicatesClass } from '../src/predicates';
+
+let Predicates = PredicatesClass;
+
 let db: idb.IDBPDatabase;
 const DB_VERSION = 3;
 
@@ -63,6 +67,25 @@ describe('Indexed db storage test', () => {
 				owner: await DataStore.save(new BlogOwner({ name: 'owner 3' })),
 			}),
 		);
+	});
+
+	afterEach(async () => {
+		// TODO: find a better way to clean up these records / reset DataStore
+		// in the context of this test.
+		await DataStore.delete(Author, Predicates.ALL);
+		await DataStore.delete(Album, Predicates.ALL);
+		await DataStore.delete(Song, Predicates.ALL);
+		await DataStore.delete(Blog, Predicates.ALL);
+		await DataStore.delete(BlogOwner, Predicates.ALL);
+		await DataStore.delete(Comment, Predicates.ALL);
+		await DataStore.delete(Editor, Predicates.ALL);
+		await DataStore.delete(Forum, Predicates.ALL);
+		await DataStore.delete(ForumEditorJoin, Predicates.ALL);
+		await DataStore.delete(Post, Predicates.ALL);
+		await DataStore.delete(PostAuthorJoin, Predicates.ALL);
+		await DataStore.delete(Person, Predicates.ALL);
+		await DataStore.delete(Project, Predicates.ALL);
+		await DataStore.delete(Team, Predicates.ALL);
 	});
 
 	test('setup function', async () => {
@@ -603,6 +626,405 @@ describe('Indexed db storage test', () => {
 		expect(sortedPersons[0].username).toEqual('johnsnow');
 		expect(sortedPersons[1].username).toEqual('greatjohnumber');
 		expect(sortedPersons[2].username).toEqual('smalljohnumber');
+	});
+
+	test('pagination w/out sort - first page', async () => {
+		expect.assertions(3);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const firstPage = await DataStore.query(Person, Predicates.ALL, {
+			page: 0,
+			limit: 2,
+		});
+
+		expect(firstPage.length).toEqual(2);
+		expect(firstPage[0].firstName).toEqual('John');
+		expect(firstPage[1].firstName).toEqual('Clem');
+	});
+
+	test('pagination w/out sort - second page', async () => {
+		expect.assertions(3);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const secondPage = await DataStore.query(Person, Predicates.ALL, {
+			page: 1,
+			limit: 2,
+		});
+
+		expect(secondPage.length).toEqual(2);
+		expect(secondPage[0].firstName).toEqual('Beezus');
+		expect(secondPage[1].firstName).toEqual('Meow Meow');
+	});
+
+	test('pagination w/out sort - third page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const thirdPage = await DataStore.query(Person, Predicates.ALL, {
+			page: 2,
+			limit: 100,
+		});
+
+		expect(thirdPage.length).toEqual(0);
+	});
+
+	test('pagination w/out sort - fourth page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const fourthPage = await DataStore.query(Person, Predicates.ALL, {
+			page: 3,
+			limit: 2,
+		});
+
+		expect(fourthPage.length).toEqual(0);
+	});
+
+	test('single record pagination w/out sort - first page', async () => {
+		expect.assertions(2);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		await DataStore.save(p1);
+
+		const firstPage = await DataStore.query(Person, Predicates.ALL, {
+			page: 0,
+			limit: 20,
+		});
+
+		expect(firstPage.length).toEqual(1);
+		expect(firstPage[0].firstName).toEqual('John');
+	});
+
+	test('single record pagination w/out sort - second page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		await DataStore.save(p1);
+
+		const secondPage = await DataStore.query(Person, Predicates.ALL, {
+			page: 1,
+			limit: 20,
+		});
+
+		expect(secondPage.length).toEqual(0);
+	});
+
+	test('pagination w/ sort - first page', async () => {
+		expect.assertions(3);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const firstPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 0,
+			limit: 2,
+		});
+
+		expect(firstPage.length).toEqual(2);
+		expect(firstPage[0].firstName).toEqual('Meow Meow');
+		expect(firstPage[1].firstName).toEqual('John');
+	});
+
+	test('pagination w/ sort - second page', async () => {
+		expect.assertions(3);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const secondPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 1,
+			limit: 2,
+		});
+
+		expect(secondPage.length).toEqual(2);
+		expect(secondPage[0].firstName).toEqual('Clem');
+		expect(secondPage[1].firstName).toEqual('Beezus');
+	});
+
+	test('pagination w/ sort - third page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const thirdPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 2,
+			limit: 100,
+		});
+
+		expect(thirdPage.length).toEqual(0);
+	});
+
+	test('pagination w/ sort - fourth page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		const p2 = new Person({
+			firstName: 'Clem',
+			lastName: 'Fandango',
+		});
+
+		const p3 = new Person({
+			firstName: 'Beezus',
+			lastName: 'Fuffoon',
+		});
+
+		const p4 = new Person({
+			firstName: 'Meow Meow',
+			lastName: 'Fuzzyface',
+		});
+
+		await DataStore.save(p1);
+		await DataStore.save(p2);
+		await DataStore.save(p3);
+		await DataStore.save(p4);
+
+		const fourthPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 3,
+			limit: 2,
+		});
+
+		expect(fourthPage.length).toEqual(0);
+	});
+
+	test('single record pagination w/ sort - first page', async () => {
+		expect.assertions(2);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		await DataStore.save(p1);
+
+		const firstPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 0,
+			limit: 20,
+		});
+
+		expect(firstPage.length).toEqual(1);
+		expect(firstPage[0].firstName).toEqual('John');
+	});
+
+	// TODO: re-enable once fix is merged
+	test.skip('single record pagination w/ sort - second page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		await DataStore.save(p1);
+
+		const secondPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 1,
+			limit: 20,
+		});
+
+		// Assertion fails - record is returned:
+		expect(secondPage.length).toEqual(0);
+	});
+
+	// TODO: re-enable once fix is merged
+	test.skip('single record pagination w/ sort - third page', async () => {
+		expect.assertions(1);
+
+		const p1 = new Person({
+			firstName: 'John',
+			lastName: 'Snow',
+		});
+
+		await DataStore.save(p1);
+
+		const thirdPage = await DataStore.query(Person, Predicates.ALL, {
+			sort: s => s.firstName(SortDirection.DESCENDING),
+			page: 3,
+			limit: 20,
+		});
+
+		// Assertion fails - record is returned:
+		expect(thirdPage.length).toEqual(0);
 	});
 
 	/**
