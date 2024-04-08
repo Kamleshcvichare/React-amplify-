@@ -1,0 +1,13 @@
+name: Push - testing lerna
+
+on:
+  push:
+    branches:
+      - ashwin-lerna-test
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    secrets: inherit
+    uses: ./.github/workflows/callable-npm-publish-release.yml
