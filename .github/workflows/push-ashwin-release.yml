@@ -3,7 +3,7 @@ name: Push - testing lerna
 on:
   push:
     branches:
-      - ashwin-lerna-test
+      - ashwin-lerna-test-2
 
 jobs:
   release:
