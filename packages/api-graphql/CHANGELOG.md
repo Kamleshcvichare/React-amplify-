@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 4.1.0 (2024-04-08)
+
+### Features
+
+- test new feature ([7f5aa24](https://github.com/aws-amplify/amplify-js/commit/7f5aa24e4a709772e415c0c9791aecc18054f3a5))
+
 ## 4.0.27 (2024-04-02)
 
 **Note:** Version bump only for package @aws-amplify/api-graphql
