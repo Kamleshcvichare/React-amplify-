@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.2.0](https://github.com/aws-amplify/amplify-js/compare/@aws-amplify/auth@6.1.0...@aws-amplify/auth@6.2.0) (2024-04-08)
+
+### Features
+
+- test auth new feature ([b19a7e6](https://github.com/aws-amplify/amplify-js/commit/b19a7e6b4720406c2ec8938e0ac74957976dc780))
+
 # 6.1.0 (2024-04-08)
 
 ### Features
