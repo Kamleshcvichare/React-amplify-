@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.3.0](https://github.com/aws-amplify/amplify-js/compare/@aws-amplify/storage@6.1.0...@aws-amplify/storage@6.3.0) (2024-04-09)
+
+### Features
+
+- test storage new feature ([4fa3779](https://github.com/aws-amplify/amplify-js/commit/4fa37793cda41dc53d1930e8f3edf93d630fb7cf))
+- test storage new feature ([eb0262b](https://github.com/aws-amplify/amplify-js/commit/eb0262bbfb340adb48a6c6063c3c052b5bbcdfea))
+
 # [6.2.0](https://github.com/aws-amplify/amplify-js/compare/@aws-amplify/storage@6.1.0...@aws-amplify/storage@6.2.0) (2024-04-08)
 
 ### Features
