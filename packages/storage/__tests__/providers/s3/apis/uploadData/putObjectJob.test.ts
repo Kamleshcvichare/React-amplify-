@@ -57,34 +57,52 @@ mockPutObject.mockResolvedValue({
 describe('putObjectJob with key', () => {
 	it('should supply the correct parameters to putObject API handler', async () => {
 		const abortController = new AbortController();
-		const key = 'key';
-		const finalKey = `public/${key}`;
+		const inputKey = 'key';
+		const finalKey = `public/${inputKey}`;
 		const data = 'data';
-		const contentType = 'contentType';
+		const mockContentType = 'contentType';
 		const contentDisposition = 'contentDisposition';
 		const contentEncoding = 'contentEncoding';
-		const metadata = { key: 'value' };
+		const mockMetadata = { key: 'value' };
 		const onProgress = jest.fn();
 		const useAccelerateEndpoint = true;
 
 		const job = putObjectJob(
 			{
-				key,
+				key: inputKey,
 				data,
 				options: {
 					contentDisposition,
 					contentEncoding,
-					contentType,
-					metadata,
+					contentType: mockContentType,
+					metadata: mockMetadata,
 					onProgress,
 					useAccelerateEndpoint,
 				},
 			},
 			abortController.signal,
 		);
-		const result = await job();
-		expect(result).toEqual({
+		const {
 			key,
+			path,
+			contentType,
+			eTag,
+			lastModified,
+			metadata,
+			size,
+			versionId,
+		} = await job();
+		expect({
+			key,
+			path,
+			contentType,
+			eTag,
+			lastModified,
+			metadata,
+			size,
+			versionId,
+		}).toEqual({
+			key: inputKey,
 			path: finalKey,
 			eTag: 'eTag',
 			versionId: 'versionId',
@@ -146,33 +164,51 @@ describe('putObjectJob with path', () => {
 		},
 	])(
 		'should supply the correct parameters to putObject API handler when path is $path',
-		async ({ path, expectedKey }) => {
+		async ({ path: inputPath, expectedKey }) => {
 			const abortController = new AbortController();
 			const data = 'data';
-			const contentType = 'contentType';
+			const mockContentType = 'contentType';
 			const contentDisposition = 'contentDisposition';
 			const contentEncoding = 'contentEncoding';
-			const metadata = { key: 'value' };
+			const mockMetadata = { key: 'value' };
 			const onProgress = jest.fn();
 			const useAccelerateEndpoint = true;
 
 			const job = putObjectJob(
 				{
-					path,
+					path: inputPath,
 					data,
 					options: {
 						contentDisposition,
 						contentEncoding,
-						contentType,
-						metadata,
+						contentType: mockContentType,
+						metadata: mockMetadata,
 						onProgress,
 						useAccelerateEndpoint,
 					},
 				},
 				abortController.signal,
 			);
-			const result = await job();
-			expect(result).toEqual({
+			const {
+				key,
+				path,
+				contentType,
+				eTag,
+				lastModified,
+				metadata,
+				size,
+				versionId,
+			} = await job();
+			expect({
+				key,
+				path,
+				contentType,
+				eTag,
+				lastModified,
+				metadata,
+				size,
+				versionId,
+			}).toEqual({
 				path: expectedKey,
 				key: expectedKey,
 				eTag: 'eTag',

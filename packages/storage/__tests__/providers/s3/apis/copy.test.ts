@@ -10,6 +10,8 @@ import { copy } from '../../../../src/providers/s3/apis';
 import {
 	CopySourceOptionsWithKey,
 	CopyDestinationOptionsWithKey,
+	CopyInput,
+	CopyOutput,
 } from '../../../../src/providers/s3/types';
 
 jest.mock('../../../../src/providers/s3/utils/client');
@@ -48,6 +50,10 @@ const copyObjectClientBaseParams = {
 	Bucket: bucket,
 	MetadataDirective: 'COPY',
 };
+
+// Adding the wrapper to catch some of type misses we had on wrappers before
+const copyWrapper = async (input: CopyInput): Promise<CopyOutput> =>
+	copy(input);
 
 describe('copy API', () => {
 	beforeAll(() => {
@@ -166,18 +172,17 @@ describe('copy API', () => {
 					};
 
 					it(`should copy ${source.accessLevel} ${targetIdentityIdMsg} -> ${destination.accessLevel}`, async () => {
-						expect(
-							await copy({
-								source: {
-									...(source as CopySourceOptionsWithKey),
-									key: sourceKey,
-								},
-								destination: {
-									...(destination as CopyDestinationOptionsWithKey),
-									key: destinationKey,
-								},
-							}),
-						).toEqual(copyResult);
+						const { key, path } = await copyWrapper({
+							source: {
+								...(source as CopySourceOptionsWithKey),
+								key: sourceKey,
+							},
+							destination: {
+								...(destination as CopyDestinationOptionsWithKey),
+								key: destinationKey,
+							},
+						});
+						expect({ key, path }).toEqual(copyResult);
 						expect(copyObject).toHaveBeenCalledTimes(1);
 						expect(copyObject).toHaveBeenCalledWith(copyObjectClientConfig, {
 							...copyObjectClientBaseParams,
@@ -222,14 +227,13 @@ describe('copy API', () => {
 					destinationPath,
 					expectedDestinationPath,
 				}) => {
-					expect(
-						await copy({
-							source: { path: sourcePath },
-							destination: { path: destinationPath },
-						}),
-					).toEqual({
-						path: expectedDestinationPath,
+					const { key, path } = await copyWrapper({
+						source: { path: sourcePath },
+						destination: { path: destinationPath },
+					});
+					expect({ key, path }).toEqual({
 						key: expectedDestinationPath,
+						path: expectedDestinationPath,
 					});
 					expect(copyObject).toHaveBeenCalledTimes(1);
 					expect(copyObject).toHaveBeenCalledWith(copyObjectClientConfig, {
@@ -257,7 +261,7 @@ describe('copy API', () => {
 			const sourceKey = 'SourceKeyNotFound';
 			const destinationKey = 'destinationKey';
 			try {
-				await copy({
+				await copyWrapper({
 					source: { key: sourceKey },
 					destination: { key: destinationKey },
 				});
@@ -276,7 +280,7 @@ describe('copy API', () => {
 			expect.assertions(2);
 			try {
 				// @ts-expect-error
-				await copy({
+				await copyWrapper({
 					source: { path: 'sourcePath' },
 					destination: { key: 'destinationKey' },
 				});
@@ -291,7 +295,7 @@ describe('copy API', () => {
 			expect.assertions(2);
 			try {
 				// @ts-expect-error
-				await copy({
+				await copyWrapper({
 					source: { key: 'sourcePath' },
 					destination: { path: 'destinationKey' },
 				});
