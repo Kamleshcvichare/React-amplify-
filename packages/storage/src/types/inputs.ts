@@ -19,9 +19,12 @@ export type StorageOperationInputWithPrefixPath = StrictUnion<
 export interface StorageOperationInputWithKey {
 	/** @deprecated Use `path` instead. */
 	key: string;
+	path?: never;
 }
 export interface StorageOperationInputWithPath {
 	path: string | (({ identityId }: { identityId?: string }) => string);
+	// /** @deprecated Use `path` instead. */
+	// key?: never;
 }
 
 /** @deprecated Use {@link StorageOperationInputWithPath} instead. */
@@ -46,7 +49,9 @@ export type StorageGetPropertiesInputWithKey<Options extends StorageOptions> =
 	StorageOperationInputWithKey & StorageOperationOptionsInput<Options>;
 
 export type StorageGetPropertiesInputWithPath<Options> =
-	StorageOperationInputWithPath & StorageOperationOptionsInput<Options>;
+	StorageOperationInputWithPath & {
+		key?: never;
+	} & StorageOperationOptionsInput<Options>;
 
 export type StorageRemoveInputWithKey<Options> = StorageOperationInputWithKey &
 	StorageOperationOptionsInput<Options>;
@@ -57,18 +62,24 @@ export type StorageRemoveInputWithPath<Options> =
 /** @deprecated Use {@link StorageListInputWithPath} instead. */
 export type StorageListInputWithPrefix<
 	Options extends StorageListAllOptions | StorageListPaginateOptions,
-> = StorageOperationInputWithPrefix & StorageOperationOptionsInput<Options>;
+> = StorageOperationInputWithPrefix & {
+	path?: never;
+} & StorageOperationOptionsInput<Options>;
 
 export type StorageListInputWithPath<
 	Options extends StorageListAllOptions | StorageListPaginateOptions,
-> = StorageOperationInputWithPath & StorageOperationOptionsInput<Options>;
+> = StorageOperationInputWithPath & {
+	prefix?: never;
+} & StorageOperationOptionsInput<Options>;
 
 /** @deprecated Use {@link StorageGetUrlInputWithPath} instead. */
 export type StorageGetUrlInputWithKey<Options extends StorageOptions> =
 	StorageOperationInputWithKey & StorageOperationOptionsInput<Options>;
 
 export type StorageGetUrlInputWithPath<Options> =
-	StorageOperationInputWithPath & StorageOperationOptionsInput<Options>;
+	StorageOperationInputWithPath & {
+		key?: never;
+	} & StorageOperationOptionsInput<Options>;
 
 /** @deprecated Use {@link StorageUploadDataInputWithPath} instead. */
 export type StorageUploadDataInputWithKey<Options extends StorageOptions> =
@@ -94,12 +105,15 @@ export interface StorageCopyInputWithKey<
 	};
 }
 
-export interface StorageCopyInputWithPath {
-	source: StorageOperationInputWithPath & {
+export interface StorageCopyInputWithPath<
+	SourceOptions extends StorageOptions,
+	DestinationOptions extends StorageOptions,
+> {
+	source: SourceOptions & {
 		/** @deprecated Use path instead. */
 		key?: never;
 	};
-	destination: StorageOperationInputWithPath & {
+	destination: DestinationOptions & {
 		/** @deprecated Use path instead. */
 		key?: never;
 	};

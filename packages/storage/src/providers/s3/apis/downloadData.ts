@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-vars */
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 

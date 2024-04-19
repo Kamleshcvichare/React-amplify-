@@ -12,11 +12,14 @@ export {
 	ListPaginateOptionsWithPrefix,
 	ListAllOptionsWithPath,
 	ListPaginateOptionsWithPath,
-	RemoveOptions,
+	RemoveOptionsWithKey,
+	RemoveOptionsWithPath,
 	DownloadDataOptionsWithPath,
 	DownloadDataOptionsWithKey,
 	CopyDestinationOptionsWithKey,
 	CopySourceOptionsWithKey,
+	CopyDestinationOptionsWithPath,
+	CopySourceOptionsWithPath,
 } from './options';
 export {
 	DownloadDataOutput,
